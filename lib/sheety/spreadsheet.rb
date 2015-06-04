@@ -53,7 +53,7 @@ class Sheety::Spreadsheet < Sheety::Feed
     worksheet.rows # Fetches the link we can save rows to
 
     # We have to normalize the keys we display to a version without underscores or spaces or other bollocks
-    header_keys = Hash[headers.map { |k| [k, Row.normalize_key(k)] }]
+    header_keys = Hash[headers.map { |k| [k, Sheety::Row.normalize_key(k)] }]
 
     # TODO: Finish this if I end up caring....
     # dupes = (header_keys.values - header_keys.values.uniq)
