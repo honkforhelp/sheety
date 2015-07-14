@@ -40,19 +40,35 @@ module Sheety
     end
 
     def get_feed(uri)
-      return parse_response(HTTParty.get(uri, headers: get_headers))
+      begin
+        return parse_response(HTTParty.get(uri, headers: get_headers))
+      rescue
+        return nil
+      end
     end
 
     def post_feed(uri, data)
-      return parse_response(HTTParty.post(uri, body: data, headers: post_headers))
+      begin
+        return parse_response(HTTParty.post(uri, body: data, headers: post_headers))
+      rescue
+        return nil
+      end
     end
 
     def put_feed(uri, data)
-      return parse_response(HTTParty.put(uri, body: data, headers: put_headers))
+      begin
+        return parse_response(HTTParty.put(uri, body: data, headers: put_headers))
+      rescue
+        return nil
+      end
     end
 
     def delete_feed(uri)
-      return parse_response(HTTParty.delete(uri, headers: delete_headers))
+      begin
+        return parse_response(HTTParty.delete(uri, headers: delete_headers))
+      rescue
+        return nil
+      end
     end
 
     private
