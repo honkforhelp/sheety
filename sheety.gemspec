@@ -12,4 +12,5 @@ Gem::Specification.new do |s|
 
   s.add_runtime_dependency 'xml-simple', "= 1.1.5-bisrael"
   s.add_runtime_dependency "google-api-client", "~> 0.8", ">= 0.8.6"
+  s.add_runtime_dependency 'httparty', "~>0.13"
 end
