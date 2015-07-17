@@ -1,7 +1,7 @@
 Gem::Specification.new do |s|
   s.name        = 'sheety'
-  s.version     = '0.2.0'
-  s.date        = '2015-06-03'
+  s.version     = '0.2.1'
+  s.date        = '2015-07-17'
   s.summary     = "A Google Spreadsheets Gem"
   s.description = "An interface for manipulating Google Sheets in Ruby on Rails"
   s.authors     = ["Blake Israel"]

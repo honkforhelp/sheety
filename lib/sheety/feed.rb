@@ -41,6 +41,7 @@ class Sheety::Feed
 
   def add_links(links)
     return if links.blank?
+    return unless links.respond_to?(:each)
     # Conflict prevention is here to preserve original values parsed from the entities.
     # This mainly comes into play with the List Feed (a.k.a.: Rows) because we need the
     #   ability to add new ones.
