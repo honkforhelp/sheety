@@ -56,7 +56,9 @@ class Sheety::Worksheet < Sheety::Feed
 
       resp = row.save
 
-      logs[key] = resp unless resp['id']
+      unless resp.try(:[], 'id')
+        logs[key] = (resp || "save result was nil")
+      end
     end
     return logs
   end
