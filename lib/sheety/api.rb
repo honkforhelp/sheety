@@ -39,34 +39,82 @@ module Sheety
       return (@access_token ? self : nil)
     end
 
+    # block so you can have the max retries set only for a small amount of code
+    def with_max_retries(num, &block)
+      raise ArgumentError.new, "Must pass a block!" unless block_given?
+
+      previous_max = @max_retries
+      @max_retries = num.to_i
+      yield
+      @max_retries = previous_max
+    end
+
+    attr_accessor :max_read_retries
+
+    def with_max_read_retries(num)
+      if block_given?
+        previous_max = @max_read_retries
+        @max_read_retries = num.to_i
+        yield
+        @max_read_retries = previous_max
+      else
+        @max_read_retries = num.to_i
+      end
+    end
+    alias_method :set_max_read_retries, :with_max_read_retries
+
     def get_feed(uri)
+      tries = 0
       begin
         return parse_response(HTTParty.get(uri, headers: get_headers))
       rescue
+        if tries < [@max_retries, @max_read_retries].max
+          tries += 1
+          retry
+        end
+
         return nil
       end
     end
 
     def post_feed(uri, data)
+      tries = 0
       begin
         return parse_response(HTTParty.post(uri, body: data, headers: post_headers))
       rescue
+        if tries < @max_retries
+          tries += 1
+          retry
+        end
+
         return nil
       end
     end
 
     def put_feed(uri, data)
+      tries = 0
       begin
         return parse_response(HTTParty.put(uri, body: data, headers: put_headers))
       rescue
+        if tries < @max_retries
+          tries += 1
+          retry
+        end
+
         return nil
       end
     end
 
     def delete_feed(uri)
+      tries = 0
       begin
         return parse_response(HTTParty.delete(uri, headers: delete_headers))
       rescue
+        if tries < @max_retries
+          tries += 1
+          retry
+        end
+
         return nil
       end
     end
@@ -108,6 +156,8 @@ module Sheety
       @client.authorization= :google_app_default
       @auth = @client.authorization
       @auth.scope = 'https://spreadsheets.google.com/feeds'
+      @max_retries = 0
+      @max_read_retries = 0
 
       return self
     end
