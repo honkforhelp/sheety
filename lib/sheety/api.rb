@@ -6,6 +6,12 @@ require_relative 'spreadsheet'
 
 module Sheety
 
+  class SheetyError < StandardError
+  end
+
+  class SheetyFetchError < SheetyError
+  end
+
   private
 
   class Api
@@ -14,7 +20,7 @@ module Sheety
     URI_LIST = 'https://spreadsheets.google.com/feeds/spreadsheets/private/full'
     URI_AUTH = 'https://www.googleapis.com/oauth2/v3/token'
 
-    def link(key) # for compat with ChildBearing
+    def link(key) # for compatibility with Sheety::Children
       return key
     end
 
