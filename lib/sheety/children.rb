@@ -27,10 +27,16 @@ module Sheety::Children
   end
 
   module ClassMethods
+    # Defines a child relationship with the given name
+    # symbol (required): the name of the child
+    # options (required): a hash of options
+    #   - klass (required): the class to use for the child instances
+    #   - link (required): the url to fetch the children from
+    #   -
     def atom_children(symbol, options)
 
       if options.blank?
-        raise ArgumentError.new("blank options #{options} are not valid options for bear_children")
+        raise ArgumentError.new("blank options #{options} are not valid options for atom_children")
       end
 
       if options[:klass].blank? || options[:klass].class != Class
@@ -42,11 +48,11 @@ module Sheety::Children
       end
 
       unless method_defined?(:link)
-        raise TypeError.new("#{self} must respond to :link to bear_children")
+        raise TypeError.new("#{self} must respond to :link to use atom_children")
       end
 
       if options[:merge_links] && method_defined?(:add_links) == false
-        raise TypeError.new("#{self} must respond to :add_links to bear_children with mrege_links=true")
+        raise TypeError.new("#{self} must respond to :add_links in atom_children with merge_links=true")
       end
 
       plural = symbol.to_s
@@ -62,13 +68,19 @@ module Sheety::Children
       except_any_method = :"#{plural}_except_any"
       find_first_method = :"find_#{singular}"
 
+      # Defines a method that instantiates a new child
       define_method(new_method) do |entry=nil|
         options[:klass].new(self, entry)
       end
 
+      # Defines a method that fetches children from Google
       define_method(get_method) do |force_refetch=false|
         if instance_variable_get(inst_var_sym).nil? || force_refetch
           list = Sheety::Api.inst.get_feed(link(options[:link])) # sort of a cyclic dependency, suboptimal
+
+          if list.nil?
+            raise Sheety::SheetyFetchError.new, "Fetching #{plural} failed!"
+          end
 
           # TODO: Create a ListFeed Object so the links we get here don't need to be worried about collisions on link ids
           add_links(list['link']) if !list['link'].blank? && options[:merge_links]
@@ -83,28 +95,45 @@ module Sheety::Children
         return instance_variable_get(inst_var_sym)
       end
 
-      define_method(enum_method) do |constraints, method|
-        return method(get_method).call().send(method) do |item|
+      # Defines a helper-method that will iterate over children checking that each item passes all constraints given
+      define_method(enum_method) do |constraints, enumeration_method|
+        children = method(get_method).()
+
+        if children.nil?
+          return []
+        end
+
+        return children.send(enumeration_method) do |item|
           constraints.all? do |constraint|
             _passes_constraint(_get_i_val(item, constraint[0], options[:accessor]), constraint[1])
           end
         end
       end
 
+      # Defines a method that selects the children who adhere to all constraints given
       define_method(where_method) do |constraints|
         return method(enum_method).call(constraints, :find_all)
       end
 
+      # Defines a method that selects the first child that passes all constraints given
       define_method(find_first_method) do |constraints|
         return method(enum_method).call(constraints, :detect)
       end
 
+      # Defines a method that selects those children who fail to meet all constraint given
       define_method(except_method) do |constraints|
         return method(enum_method).call(constraints, :reject)
       end
 
+      # Defines a method that selects those children who fail to meet at least one constraint given
       define_method(except_any_method) do |constraints|
-        return method(get_method).call().reject do |item|
+        children = method(get_method).()
+
+        if children.nil?
+          return []
+        end
+
+        return children.reject do |item|
           constraints.any? do |constraint|
             _passes_constraint(_get_i_val(item, constraint[0], options[:accessor]), constraint[1])
           end
